@@ -6,50 +6,46 @@
 <section class="page-header">
     <div class="container">
         <h1 class="fade-in-up">My Projects</h1>
-        <p class="fade-in-up delay-100">A showcase of my work, demonstrating my skills in action.</p>
+        <p class="fade-in-up delay-100">A showcase of my work, demonstrating my skills in creating diverse web solutions.</p>
     </div>
 </section>
 
-<section id="projects-gallery" class="py-16 bg-white">
+<section class="projects-gallery py-16 bg-neutral-lighter">
     <div class="container">
-        {% if all_projects %}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {% for project in all_projects %}
-                <div class="card fade-in-up delay-{{ (loop.index0 % 3) * 100 }}">
-                    <div class="card-image">
-                        <img src="{{ project.image_url or url_for('static', filename='images/project_placeholder.jpg') }}" alt="{{ project.title }}">
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">{{ project.title }}</h3>
-                        <p class="card-excerpt">{{ project.short_description }}</p>
-                        {% if project.technologies %}
-                        <div class="card-tags">
-                            {% for tech in project.technologies.split(',')|map('trim') %}
-                            <span class="card-tag">{{ tech }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <a href="{{ url_for('project_detail_page', project_slug=project.slug) }}" class="card-link mt-auto">View Details <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
-                    </div>
+        {% if projects %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for project in projects %}
+            <div class="card flex flex-col h-full fade-in-up delay-{{ loop.index0 * 100 }}">
+                <div class="card-image aspect-video overflow-hidden">
+                    <img src="{{ project.image_url or url_for('static', filename='images/project_placeholder.jpg') }}" alt="{{ project.title }}" class="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105">
                 </div>
-                {% endfor %}
+                <div class="card-content flex flex-col flex-grow p-6">
+                    <h3 class="card-title text-xl font-semibold mb-2">{{ project.title }}</h3>
+                    <p class="card-excerpt text-neutral-darker text-sm mb-4 flex-grow">{{ project.short_description }}</p>
+                    {% if project.technologies %}
+                    <div class="card-tags mb-4">
+                        {% for tech in project.technologies.split(',')|map('trim') %}
+                        <span class="card-tag inline-block bg-neutral-light text-neutral-darkest py-1 px-2.5 rounded-full text-xs mr-1 mb-1">{{ tech }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <a href="{{ url_for('project_detail', slug=project.slug) }}" class="card-link mt-auto text-primary font-medium inline-flex items-center group">
+                        View Details 
+                        <svg class="ml-1 w-4 h-4 transition-transform duration-200 ease-in-out group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </a>
+                </div>
             </div>
+            {% endfor %}
+        </div>
         {% else %}
-            <div class="text-center py-12">
-                <h2 class="text-2xl font-semibold mb-4">No Projects Yet</h2>
-                <p class="text-neutral-darker">Check back soon to see my latest work!</p>
-            </div>
+        <div class="text-center py-12">
+            <h2 class="text-2xl font-semibold mb-4">No Projects Yet</h2>
+            <p class="text-neutral-darker">Check back soon for updates on my latest work!</p>
+            <a href="{{ url_for('home') }}" class="btn btn-primary mt-6">Back to Home</a>
+        </div>
         {% endif %}
+        <!-- Pagination can be added here if there are many projects -->
     </div>
 </section>
 
-<section class="cta-section py-16 bg-neutral-lighter">
-    <div class="container text-center max-w-2xl">
-        <h2 class="text-3xl font-bold mb-4">Have a Project in Mind?</h2>
-        <p class="text-lg text-neutral-darker mb-8">
-            If you like what you see and have an idea you'd like to discuss, I'd love to hear from you. Let's collaborate to bring your vision to life.
-        </p>
-        <a href="{{ url_for('contact_page') }}" class="btn btn-primary btn-lg">Let's Talk</a>
-    </div>
-</section>
 {% endblock %}

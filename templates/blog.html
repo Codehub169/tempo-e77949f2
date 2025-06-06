@@ -1,77 +1,78 @@
 {% extends "layout.html" %}
 
-{% block title %}Blog | {{ super() }}{% endblock %}
+{% block title %}Blog | John Doe - Web Developer{% endblock %}
 
 {% block content %}
-<main>
-    <!-- Page Header -->
-    <section class="page-header">
-        <div class="container">
-            <h1 class="fade-in-up">My Thoughts & Insights</h1>
-            <p class="fade-in-up delay-100">Exploring web development, technology trends, and personal reflections.</p>
-        </div>
-    </section>
+<section class="page-header">
+    <div class="container">
+        <h1 class="fade-in-up">My Blog</h1>
+        <p class="fade-in-up delay-100">Thoughts, tutorials, and insights on web development and technology.</p>
+    </div>
+</section>
 
-    <!-- Blog Posts Section -->
-    <section class="blog-listing-section py-16 bg-white">
-        <div class="container">
-            {% if posts and posts.items %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {% for post in posts.items %}
-                        <article class="card fade-in-up delay-{{ (loop.index0 % 3) * 100 }}">
-                            <a href="{{ url_for('blog_post_page', post_slug=post.slug) }}" class="block card-image-link">
-                                <div class="card-image">
-                                    {% if post.cover_image_url %}
-                                        <img src="{{ post.cover_image_url }}" alt="{{ post.title }} Cover Image">
-                                    {% else %}
-                                        <img src="{{ url_for('static', filename='images/blog_placeholder.jpg') }}" alt="Blog Post Placeholder Image">
-                                    {% endif %}
-                                </div>
-                            </a>
-                            <div class="card-content">
-                                <p class="text-sm text-neutral-dark mb-2">
-                                    {{ post.post_date.strftime('%B %d, %Y') if post.post_date else 'N/A' }} 
-                                    {% if post.category %} &bull; {{ post.category }} {% endif %}
-                                </p>
-                                <h3 class="card-title">
-                                    <a href="{{ url_for('blog_post_page', post_slug=post.slug) }}">{{ post.title }}</a>
-                                </h3>
-                                <p class="card-excerpt">{{ post.excerpt if post.excerpt else 'No excerpt available.' }}</p>
-                                <a href="{{ url_for('blog_post_page', post_slug=post.slug) }}" class="card-link mt-auto">Read More <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
-                            </div>
-                        </article>
-                    {% endfor %}
+<section class="blog-listing py-16 bg-neutral-lighter">
+    <div class="container">
+        {% if posts_pagination and posts_pagination.items %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for post in posts_pagination.items %}
+            <article class="card flex flex-col h-full fade-in-up delay-{{ loop.index0 * 100 }} group">
+                <div class="card-image aspect-video overflow-hidden">
+                    <a href="{{ url_for('blog_post', slug=post.slug) }}">
+                        <img src="{{ post.cover_image_url or url_for('static', filename='images/blog_placeholder.jpg') }}" alt="{{ post.title }}" class="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105">
+                    </a>
                 </div>
-
-                <!-- Pagination -->
-                {% if posts.pages > 1 %}
-                <nav aria-label="Blog navigation" class="mt-16 pt-8 border-t border-neutral-light">
-                    <ul class="flex justify-center items-center gap-4">
-                        {% if posts.has_prev %}
-                            <li><a href="{{ url_for('blog_page', page=posts.prev_num) }}" class="btn btn-outline-primary">&laquo; Newer Posts</a></li>
-                        {% else %}
-                            <li><span class="btn btn-outline-primary opacity-50 cursor-not-allowed">&laquo; Newer Posts</span></li>
-                        {% endif %}
-                        
-                        <li class="text-neutral-darker">Page {{ posts.page }} of {{ posts.pages }}</li>
-                        
-                        {% if posts.has_next %}
-                            <li><a href="{{ url_for('blog_page', page=posts.next_num) }}" class="btn btn-outline-primary">Older Posts &raquo;</a></li>
-                        {% else %}
-                            <li><span class="btn btn-outline-primary opacity-50 cursor-not-allowed">Older Posts &raquo;</span></li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
-
-            {% else %}
-                <div class="text-center py-12 fade-in-up">
-                    <h2 class="text-2xl font-semibold mb-4 text-headings">No Blog Posts Yet</h2>
-                    <p class="text-neutral-darker mb-8">I'm working on some insightful articles. Please check back soon!</p>
-                    <a href="{{ url_for('home_page') }}" class="btn btn-primary">Back to Home</a>
-                </div> 
-            {% endif %}
+                <div class="card-content flex flex-col flex-grow p-6">
+                    <p class="text-sm text-neutral-dark mb-2">
+                        <time datetime="{{ post.date_posted.isoformat() }}">{{ post.date_posted.strftime('%B %d, %Y') }}</time>
+                        {% if post.category %} &bull; <span>{{ post.category }}</span>{% endif %}
+                    </p>
+                    <h3 class="card-title text-xl font-semibold mb-2"><a href="{{ url_for('blog_post', slug=post.slug) }}" class="hover:text-primary transition-colors">{{ post.title }}</a></h3>
+                    <p class="card-excerpt text-neutral-darker text-sm mb-4 flex-grow">{{ post.excerpt }}</p>
+                    <a href="{{ url_for('blog_post', slug=post.slug) }}" class="card-link mt-auto text-primary font-medium inline-flex items-center group">
+                        Read More 
+                        <svg class="ml-1 w-4 h-4 transition-transform duration-200 ease-in-out group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
         </div>
-    </section>
-</main>
+
+        <!-- Pagination -->
+        {% if posts_pagination.pages > 1 %}
+        <nav class="pagination mt-16 text-center" aria-label="Blog pagination">
+            {% if posts_pagination.has_prev %}
+                <a href="{{ url_for('blog', page=posts_pagination.prev_num) }}" class="btn btn-outline-primary mr-2">&laquo; Newer Posts</a>
+            {% else %}
+                 <span class="btn btn-outline-primary mr-2 opacity-50 cursor-not-allowed" aria-disabled="true">&laquo; Newer Posts</span>
+            {% endif %}
+            
+            {% for page_num in posts_pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if posts_pagination.page == page_num %}
+                        <a href="{{ url_for('blog', page=page_num) }}" class="btn btn-primary mr-2" aria-current="page">{{ page_num }}</a>
+                    {% else %}
+                        <a href="{{ url_for('blog', page=page_num) }}" class="btn btn-outline-primary mr-2">{{ page_num }}</a>
+                    {% endif %}
+                {% elif loop.last and posts_pagination.page < posts_pagination.pages - (2+1) or loop.first and posts_pagination.page > (2+1) %}
+                    <span class="mr-2">...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if posts_pagination.has_next %}
+                <a href="{{ url_for('blog', page=posts_pagination.next_num) }}" class="btn btn-outline-primary">Older Posts &raquo;</a>
+            {% else %}
+                <span class="btn btn-outline-primary opacity-50 cursor-not-allowed" aria-disabled="true">Older Posts &raquo;</span>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-12">
+            <h2 class="text-2xl font-semibold mb-4">No Blog Posts Yet</h2>
+            <p class="text-neutral-darker">I'm currently brewing some thoughts. Check back soon for articles!</p>
+            <a href="{{ url_for('home') }}" class="btn btn-primary mt-6">Back to Home</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}
