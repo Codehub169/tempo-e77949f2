@@ -4,17 +4,12 @@ import logging
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# Configure basic logging for the module.
-# This basicConfig is primarily effective if the module is run standalone
-# or if no other logging configuration has been set up by an importing application.
-# In a Flask app (like the provided app.py context), Flask's own logging setup
-# would typically be used and might override or precede this configuration.
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10  # seconds
 DEFAULT_RETRY_TOTAL = 3
-DEFAULT_RETRY_CONNECT = 3
+DEFAULT_RETRY_CONNECT = 3 # Retries for connection errors specifically
 DEFAULT_RETRY_BACKOFF_FACTOR = 1 # seconds
 
 def fetch_data_from_external_service():
@@ -23,83 +18,117 @@ def fetch_data_from_external_service():
     and a retry mechanism for connection issues and transient server errors.
     Uses logging for detailed error information and returns structured
     responses including user-friendly error messages.
+    Requires EXTERNAL_SERVICE_URL environment variable to be set.
     """
-    service_url = os.environ.get("EXTERNAL_SERVICE_URL", "http://34.28.45.117:5031/")
+    service_url = os.environ.get("EXTERNAL_SERVICE_URL")
     
-    response_obj = None
+    if not service_url:
+        logger.error("CRITICAL: EXTERNAL_SERVICE_URL environment variable is not set. Cannot fetch data from the external service.")
+        return {
+            "status": "error", 
+            "type": "ConfigurationError", 
+            "message": "The application is not configured to connect to the external data service. Please set the EXTERNAL_SERVICE_URL environment variable."
+        }
+    
+    logger.info(f"Attempting to fetch data from external service at URL: {service_url}")
+
+    response_obj = None # Initialize to handle it in JSONDecodeError block if request fails before response_obj is assigned.
 
     session = requests.Session()
     retry_strategy = Retry(
-        total=DEFAULT_RETRY_TOTAL,  # Total number of retries
-        backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,  # Sleep for [0s, 2s, 4s] for backoff_factor=1 after 1st, 2nd, 3rd retries respectively. Actual: factor * (2**(retry_num-1))
-                                            # For backoff_factor=1, sleep times are: 1s, 2s, 4s.
-        status_forcelist=[500, 502, 503, 504],  # Retry on these HTTP server error codes
-        allowed_methods=["GET"], # Only retry for idempotent methods like GET
-        connect=DEFAULT_RETRY_CONNECT # Number of retries specifically for connection errors
+        total=DEFAULT_RETRY_TOTAL,
+        backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,
+        status_forcelist=[500, 502, 503, 504],
+        allowed_methods=["GET"],
+        connect=DEFAULT_RETRY_CONNECT
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     session.mount("http://", adapter)
     session.mount("https://", adapter)
 
     try:
-        # Timeout applies to each attempt
-        response_obj = session.get(service_url, timeout=DEFAULT_TIMEOUT) 
-        response_obj.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
-        data = response_obj.json()
+        response_obj = session.get(service_url, timeout=DEFAULT_TIMEOUT)
+        response_obj.raise_for_status() # Raise an HTTPError for bad responses (4XX or 5XX)
+        data = response_obj.json() # Assumes the response is JSON
+        logger.info(f"Successfully fetched and decoded JSON data from {service_url}.")
         return {"status": "success", "data": data}
         
     except requests.exceptions.ConnectionError as e:
-        log_message = f"Connection Error for {service_url} after retries: The target machine actively refused connection or connection failed. Details: {e}"
+        log_message = (
+            f"Connection Error for {service_url} (configured with up to {DEFAULT_RETRY_CONNECT} connection retries and "
+            f"{DEFAULT_RETRY_TOTAL} total retries): Failed to establish a connection. "
+            f"The service might be down or there might be network issues. Details: {e}"
+        )
         logger.error(log_message)
-        returned_message = f"Could not connect to the external service at {service_url}. The service may be down or unreachable."
+        returned_message = (
+            f"Could not connect to the external service at {service_url}. "
+            "The service may be down or unreachable. Please verify the URL and network connectivity."
+        )
         return {"status": "error", "type": "ConnectionError", "message": returned_message}
         
     except requests.exceptions.Timeout as e:
         log_message = f"Timeout Error for {service_url} after retries: The request timed out. Details: {e}"
         logger.error(log_message)
-        returned_message = f"The request to the external service at {service_url} timed out."
+        returned_message = f"The request to the external service at {service_url} timed out after {DEFAULT_TIMEOUT} seconds."
         return {"status": "error", "type": "Timeout", "message": returned_message}
         
     except requests.exceptions.HTTPError as e:
         response_text_snippet = ""
-        # Security note: Logging response text might disclose sensitive info if the error response contains it.
-        # Truncation helps, but review if service might return sensitive data in errors.
+        status_code_str = "Unknown"
+        status_code_val = None
+
         if e.response is not None:
-            response_text_snippet = e.response.text[:500] + ('...' if len(e.response.text) > 500 else '')
+            status_code_val = e.response.status_code
+            status_code_str = str(status_code_val)
+            try:
+                # Attempt to get a snippet of the response text for logging, if available
+                # Security note: Logging response text might disclose sensitive info if the error response contains it.
+                # Truncation helps, but review if service might return sensitive data in errors.
+                response_text_snippet = e.response.text[:500] + ('...' if len(e.response.text) > 500 else '')
+            except Exception:
+                response_text_snippet = "[Could not decode response text or response was not text]"
+
         log_message = (
-            f"HTTP Error {e.response.status_code if e.response is not None else 'Unknown'} for {service_url}. "
-            f"Response: {response_text_snippet}. Full Details: {e}"
+            f"HTTP Error {status_code_str} for {service_url}. "
+            f"Response snippet: {response_text_snippet}. Full Details: {e}"
         )
         logger.error(log_message)
-        status_code = e.response.status_code if e.response is not None else 'N/A'
-        returned_message = f"Received an HTTP {status_code} error from the external service at {service_url}."
-        return {"status": "error", "type": "HTTPError", "code": status_code, "message": returned_message}
+        returned_message = f"Received an HTTP {status_code_str} error from the external service at {service_url}."
+        return {"status": "error", "type": "HTTPError", "code": status_code_val, "message": returned_message}
         
     except requests.exceptions.JSONDecodeError as e:
-        response_text_snippet = ""
-        # Security note: Logging response text might disclose sensitive info if the error response contains it.
-        if response_obj is not None and hasattr(response_obj, 'text'):
+        response_text_snippet = "[Response object not available or text attribute missing]"
+        if response_obj is not None and hasattr(response_obj, 'text') and isinstance(response_obj.text, str):
+             # Security note: Logging response text might disclose sensitive info.
             response_text_snippet = response_obj.text[:500] + ('...' if len(response_obj.text) > 500 else '')
         
         log_message = f"JSON Decode Error for {service_url}: Failed to parse JSON response. Response text snippet: '{response_text_snippet}'. Details: {e}"
         logger.error(log_message)
-        returned_message = f"Failed to parse JSON response from the external service at {service_url}. The response was not valid JSON."
+        returned_message = f"Failed to parse JSON response from {service_url}. The response was not valid JSON."
         return {"status": "error", "type": "JSONDecodeError", "message": returned_message}
 
-    except requests.exceptions.RequestException as e: # Catches other general requests-related errors
-        log_message = f"Request Exception for {service_url}: An unexpected error occurred during the request. Details: {e}"
+    except requests.exceptions.RequestException as e:
+        # Catch any other error from the requests library
+        log_message = f"Generic Request Exception for {service_url}: An error occurred during the request. Details: {e}"
         logger.error(log_message)
-        returned_message = f"An unexpected error occurred when requesting data from the external service at {service_url}."
+        returned_message = f"An error occurred when requesting data from {service_url}."
         return {"status": "error", "type": "RequestException", "message": returned_message}
     
-    except Exception as e: # Catch-all for any other unexpected errors
-        log_message = f"Unexpected error of type {type(e).__name__} when fetching data from {service_url}."
-        logger.exception(log_message) # logger.exception automatically includes exception info and stack trace
-        returned_message = f"An unexpected error occurred. Please check logs for details."
+    except Exception as e:
+        # Catch any other unexpected error
+        logger.exception(f"Unexpected {type(e).__name__} when fetching data from {service_url}")
+        returned_message = "An unexpected internal error occurred while trying to fetch external data. Please check server logs."
         return {"status": "error", "type": "UnexpectedError", "message": returned_message}
 
 # Example of how this function might be used (if run as a standalone script):
 # if __name__ == "__main__":
+#     # For testing, you might temporarily set the environment variable here or in your shell
+#     # os.environ["EXTERNAL_SERVICE_URL"] = "https://jsonplaceholder.typicode.com/todos/1" # A working example
+#     # os.environ["EXTERNAL_SERVICE_URL"] = "http://nonexistent-domain-for-testing.com" # Example of connection error
+#     # os.environ["EXTERNAL_SERVICE_URL"] = "https://httpstat.us/503" # Example of server error for retry
+#     # os.environ["EXTERNAL_SERVICE_URL"] = "https://httpstat.us/200?sleep=15000" # Example of timeout (if DEFAULT_TIMEOUT is less than 15s)
+#     # os.environ["EXTERNAL_SERVICE_URL"] = "https://www.google.com" # Example of JSONDecodeError (Google homepage is HTML)
+
 #     logger.info("Fetching data from external service (example run)...")
 #     result = fetch_data_from_external_service()
 #     
