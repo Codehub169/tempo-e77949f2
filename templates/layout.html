@@ -20,10 +20,10 @@
             <nav class="main-nav">
                 <ul>
                     <li><a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}active{% endif %}">Home</a></li>
-                    <li><a href="{{ url_for('about_page') }}" class="{% if request.endpoint == 'about_page' %}active{% endif %}">About</a></li>
-                    <li><a href="{{ url_for('projects_page') }}" class="{% if request.endpoint == 'projects_page' or request.endpoint == 'project_detail_page' %}active{% endif %}">Projects</a></li>
-                    <li><a href="{{ url_for('blog_page') }}" class="{% if request.endpoint == 'blog_page' or request.endpoint == 'blog_post_page' %}active{% endif %}">Blog</a></li>
-                    <li><a href="{{ url_for('contact_page') }}" class="{% if request.endpoint == 'contact_page' %}active{% endif %}">Contact</a></li>
+                    <li><a href="{{ url_for('about') }}" class="{% if request.endpoint == 'about' %}active{% endif %}">About</a></li>
+                    <li><a href="{{ url_for('projects') }}" class="{% if request.endpoint == 'projects' or request.endpoint == 'project_detail' %}active{% endif %}">Projects</a></li>
+                    <li><a href="{{ url_for('blog') }}" class="{% if request.endpoint == 'blog' or request.endpoint == 'blog_post' %}active{% endif %}">Blog</a></li>
+                    <li><a href="{{ url_for('contact') }}" class="{% if request.endpoint == 'contact' %}active{% endif %}">Contact</a></li>
                 </ul>
             </nav>
         </div>
