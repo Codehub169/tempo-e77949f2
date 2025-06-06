@@ -4,13 +4,17 @@ import logging
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Configure basic logging if no handlers are configured.
+# This is a common practice for libraries/modules.
+# The application (app.py) might have its own logging configuration.
+if not logging.getLogger(__name__).hasHandlers():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10  # seconds
 DEFAULT_RETRY_TOTAL = 3
 DEFAULT_RETRY_CONNECT = 3 # Retries for connection errors specifically
-DEFAULT_RETRY_BACKOFF_FACTOR = 1 # seconds
+DEFAULT_RETRY_BACKOFF_FACTOR = 1 # seconds (e.g., 1s, 2s, 4s for subsequent retries)
 
 def fetch_data_from_external_service():
     """
@@ -38,8 +42,8 @@ def fetch_data_from_external_service():
     retry_strategy = Retry(
         total=DEFAULT_RETRY_TOTAL,
         backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,
-        status_forcelist=[500, 502, 503, 504],
-        allowed_methods=["GET"],
+        status_forcelist=[500, 502, 503, 504], # Retry on these server errors
+        allowed_methods=frozenset(["GET"]), # Only retry for idempotent methods like GET
         connect=DEFAULT_RETRY_CONNECT
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
@@ -57,17 +61,19 @@ def fetch_data_from_external_service():
         log_message = (
             f"Connection Error for {service_url} (configured with up to {DEFAULT_RETRY_CONNECT} connection retries and "
             f"{DEFAULT_RETRY_TOTAL} total retries): Failed to establish a connection. "
-            f"The service might be down or there might be network issues. Details: {e}"
+            f"The service might be down, unreachable, or blocked by a firewall. Details: {e}"
         )
         logger.error(log_message)
         returned_message = (
             f"Could not connect to the external service at {service_url}. "
-            "The service may be down or unreachable. Please verify the URL and network connectivity."
+            "The service may be down, unreachable, or blocked by a firewall. "
+            "Please verify the URL, check your network connectivity (including DNS resolution), "
+            "and ensure that any firewalls (local or network) are not blocking outgoing connections to this service."
         )
         return {"status": "error", "type": "ConnectionError", "message": returned_message}
         
     except requests.exceptions.Timeout as e:
-        log_message = f"Timeout Error for {service_url} after retries: The request timed out. Details: {e}"
+        log_message = f"Timeout Error for {service_url} after retries: The request timed out (timeout set to {DEFAULT_TIMEOUT}s). Details: {e}"
         logger.error(log_message)
         returned_message = f"The request to the external service at {service_url} timed out after {DEFAULT_TIMEOUT} seconds."
         return {"status": "error", "type": "Timeout", "message": returned_message}
@@ -81,7 +87,6 @@ def fetch_data_from_external_service():
             status_code_val = e.response.status_code
             status_code_str = str(status_code_val)
             try:
-                # Attempt to get a snippet of the response text for logging, if available
                 # Security note: Logging response text might disclose sensitive info if the error response contains it.
                 # Truncation helps, but review if service might return sensitive data in errors.
                 response_text_snippet = e.response.text[:500] + ('...' if len(e.response.text) > 500 else '')
@@ -116,15 +121,16 @@ def fetch_data_from_external_service():
     
     except Exception as e:
         # Catch any other unexpected error
+        # Use logger.exception to include stack trace for unexpected errors
         logger.exception(f"Unexpected {type(e).__name__} when fetching data from {service_url}")
         returned_message = "An unexpected internal error occurred while trying to fetch external data. Please check server logs."
         return {"status": "error", "type": "UnexpectedError", "message": returned_message}
 
-# Example of how this function might be used (if run as a standalone script):
+# Example of how this function might be used (if run as a standalone script for testing):
 # if __name__ == "__main__":
 #     # For testing, you might temporarily set the environment variable here or in your shell
 #     # os.environ["EXTERNAL_SERVICE_URL"] = "https://jsonplaceholder.typicode.com/todos/1" # A working example
-#     # os.environ["EXTERNAL_SERVICE_URL"] = "http://nonexistent-domain-for-testing.com" # Example of connection error
+#     # os.environ["EXTERNAL_SERVICE_URL"] = "http://nonexistent-domain-for-testing-12345.com" # Example of connection error
 #     # os.environ["EXTERNAL_SERVICE_URL"] = "https://httpstat.us/503" # Example of server error for retry
 #     # os.environ["EXTERNAL_SERVICE_URL"] = "https://httpstat.us/200?sleep=15000" # Example of timeout (if DEFAULT_TIMEOUT is less than 15s)
 #     # os.environ["EXTERNAL_SERVICE_URL"] = "https://www.google.com" # Example of JSONDecodeError (Google homepage is HTML)
