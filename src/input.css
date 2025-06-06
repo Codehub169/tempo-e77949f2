@@ -1,0 +1,317 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset and Base Styles from provided HTML - adjusted for Tailwind context */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+    --color-primary: #3B82F6; /* Blue */
+    --color-primary-dark: #2563EB;
+    --color-secondary: #1F2937; /* Dark Grey */
+    --color-secondary-dark: #111827; /* Almost black for heading text */
+    --color-accent: #10B981; /* Green */
+    --color-neutral-lightest: #F9FAFB; /* Light Grey bg */
+    --color-neutral-lighter: #F3F4F6;
+    --color-neutral-light: #E5E7EB; /* Lighter Grey for borders/dividers */
+    --color-neutral-medium: #D1D5DB; /* Grey borders/dividers */
+    --color-neutral-dark: #6B7280; /* Darker Grey text */
+    --color-neutral-darker: #4B5563;
+    --color-neutral-darkest: #374151; /* Default text */
+    --color-text: var(--color-neutral-darkest);
+    --color-headings: var(--color-secondary-dark);
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-error: #EF4444;
+    --font-primary: 'Inter', sans-serif;
+    --font-secondary: 'Poppins', sans-serif;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        font-size: 16px;
+    }
+    body {
+        font-family: var(--font-primary);
+        color: var(--color-text);
+        background-color: var(--color-neutral-lightest);
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    a {
+        @apply text-primary transition-colors duration-300 ease-in-out;
+    }
+    a:hover {
+        color: var(--color-primary-dark);
+    }
+    img {
+        @apply max-w-full h-auto block;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-secondary);
+        color: var(--color-headings);
+        line-height: 1.3;
+        @apply mb-4 font-semibold; /* Tailwind equivalent for margin and weight */
+    }
+    h1 { @apply text-5xl tracking-tight; } /* Adjusted from 3rem, tracking for letter-spacing */
+    h2 { @apply text-4xl tracking-tight; } /* Adjusted from 2.25rem */
+    h3 { @apply text-3xl; } /* Adjusted from 1.875rem */
+    h4 { @apply text-2xl; }  /* Adjusted from 1.5rem */
+    p {
+        @apply mb-5 text-neutral-darker;
+    }
+    ul, ol {
+        list-style: none;
+    }
+    /* Add more base styles here if needed, prefer Tailwind utilities where possible */
+}
+
+@layer components {
+    /* Container utility - can be extended or customized if needed beyond Tailwind's default */
+    .container {
+        @apply max-w-screen-xl mx-auto px-6; /* max-w-1280px, px-1.5rem */
+    }
+
+    /* Button styles - These can be component classes */
+    .btn {
+        @apply inline-block py-3 px-7 rounded-md font-secondary font-medium text-base text-center transition-all duration-300 ease-in-out cursor-pointer border-2 border-transparent tracking-wide;
+        /* padding: 0.75rem 1.75rem; letter-spacing: 0.025em; */
+    }
+    .btn-lg { @apply py-4 px-10 text-lg; }
+    .btn-primary {
+        @apply bg-primary text-white border-primary;
+    }
+    .btn-primary:hover {
+        background-color: var(--color-primary-dark);
+        border-color: var(--color-primary-dark);
+        @apply shadow-md -translate-y-0.5;
+    }
+    .btn-secondary {
+        @apply bg-secondary text-white border-secondary;
+    }
+    .btn-secondary:hover {
+        background-color: var(--color-secondary-dark);
+        border-color: var(--color-secondary-dark);
+        @apply shadow-md -translate-y-0.5;
+    }
+    .btn-outline-primary {
+        @apply bg-transparent text-primary border-2 border-primary;
+    }
+    .btn-outline-primary:hover {
+        @apply bg-primary text-white shadow-md -translate-y-0.5;
+    }
+    .btn-link {
+        @apply bg-transparent text-primary p-0 border-none;
+    }
+    .btn-link:hover {
+        @apply underline;
+        color: var(--color-primary-dark);
+    }
+
+    /* Header styling - main-header, logo, main-nav */
+    .main-header {
+        background-color: rgba(255,255,255,0.95); 
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        @apply py-4 shadow-sm sticky top-0 z-[1000] w-full;
+    }
+    .main-header .container { @apply flex justify-between items-center; }
+    .logo {
+        font-family: var(--font-secondary);
+        @apply text-3xl font-bold;
+        color: var(--color-headings);
+    }
+    .logo a { color: inherit; }
+    .main-nav ul { @apply hidden md:flex items-center; }
+    .main-nav ul li { @apply ml-8; }
+    .main-nav ul li a {
+        font-family: var(--font-primary);
+        @apply font-medium text-sm text-neutral-darker py-2 px-1 relative transition-colors duration-300 ease-in-out;
+        /* font-size: 0.95rem */
+    }
+    .main-nav ul li a::after {
+        content: '';
+        @apply absolute bottom-[-2px] left-0 w-0 h-[2px] bg-primary transition-all duration-300 ease-in-out;
+    }
+    .main-nav ul li a:hover,
+    .main-nav ul li a.active {
+        color: var(--color-primary);
+    }
+    .main-nav ul li a:hover::after,
+    .main-nav ul li a.active::after {
+        @apply w-full;
+    }
+    .nav-toggle {
+        @apply md:hidden bg-transparent border-none text-3xl cursor-pointer z-[1001];
+        color: var(--color-secondary);
+    }
+    .nav-toggle svg { fill: var(--color-secondary); }
+    .main-nav ul.active { /* For mobile: JS toggles this class */
+        @apply flex flex-col absolute top-full left-0 w-full bg-white shadow-lg py-4 border-t border-neutral-light;
+    }
+    .main-nav ul.active li { @apply ml-0 w-full; }
+    .main-nav ul.active li a { @apply py-4 px-6 block w-full border-b border-neutral-lighter; }
+    .main-nav ul.active li:last-child a { @apply border-b-0; }
+    .main-nav ul.active li a::after { @apply hidden; }
+
+    /* Footer styling */
+    .main-footer {
+        background-color: var(--color-secondary-dark);
+        color: var(--color-neutral-light);
+        @apply py-12 text-center;
+    }
+    .main-footer p { @apply mb-2 text-sm; color: var(--color-neutral-medium); }
+    .main-footer .logo { color: #fff; @apply mb-4 text-2xl; }
+    .social-links a {
+        color: var(--color-neutral-light);
+        @apply mx-3 text-2xl transition-all duration-300 ease-in-out inline-block;
+    }
+    .social-links a:hover { color: var(--color-primary); @apply scale-110; }
+
+    /* Card styles */
+    .card {
+        @apply bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 ease-in-out flex flex-col h-full;
+    }
+    .card:hover {
+        @apply -translate-y-1.5 shadow-xl;
+    }
+    .card-image { @apply w-full h-[220px] overflow-hidden bg-neutral-lighter; }
+    .card-image img { @apply w-full h-full object-cover transition-transform duration-300 ease-in-out; }
+    .card:hover .card-image img { @apply scale-105; }
+    .card-content { @apply p-7 flex-grow flex flex-col; } /* padding: 1.75rem */
+    .card-title { @apply text-xl mb-3; color: var(--color-headings); } /* font-size: 1.375rem */
+    .card-excerpt { @apply text-sm text-neutral-darker mb-5 leading-relaxed flex-grow; } /* font-size: 0.95rem */
+    .card-tags { @apply mb-4; }
+    .card-tag {
+        @apply inline-block bg-neutral-lighter text-neutral-darker py-1 px-2.5 rounded-full text-xs mr-2 mb-2;
+    }
+    .card-link {
+        @apply text-primary font-medium inline-flex items-center no-underline;
+    }
+    .card-link:hover {
+        color: var(--color-primary-dark);
+        @apply underline;
+    }
+    .card-link svg { @apply ml-1 w-4 h-4; }
+
+    /* Form Styles */
+    .form-group { @apply mb-6; }
+    .form-group label { @apply block mb-2 font-medium; color: var(--color-headings); }
+    .form-control {
+        @apply w-full py-3 px-4 border border-neutral-medium rounded-md text-base text-text bg-white transition-all duration-300 ease-in-out;
+        font-family: var(--font-primary);
+    }
+    .form-control:focus {
+        @apply outline-none border-primary shadow-lg;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    }
+    textarea.form-control { @apply min-h-[150px] resize-y; }
+
+    /* Section Heading */
+    .section-heading { @apply text-center mb-16; }
+    .section-heading h2 { @apply text-4xl mb-3; color: var(--color-headings); } /* font-size: 2.5rem */
+    .section-heading .sub-title {
+        @apply text-lg text-primary font-medium uppercase tracking-wider mb-1;
+    }
+    .section-heading p { @apply text-lg text-neutral-darker max-w-2xl mx-auto leading-relaxed; }
+
+    /* Page Header (for internal pages) */
+    .page-header {
+        background-color: var(--color-secondary);
+        @apply text-white py-16 text-center; /* padding: 4rem 0 */
+    }
+    .page-header h1 { @apply text-white text-5xl mb-2; } /* font-size: 3rem */
+    .page-header p { color: var(--color-neutral-light); @apply text-xl max-w-3xl mx-auto; }
+
+    /* About Page Specific */
+    .about-image { @apply rounded-xl shadow-xl object-cover w-full max-h-[600px]; }
+    .skills-grid { @apply flex flex-wrap gap-3 mt-6 mb-6; }
+    .skill-tag {
+        background-color: var(--color-primary);
+        @apply text-white py-2 px-4 rounded-md text-sm font-medium transition-colors duration-300 ease-in-out shadow-sm;
+    }
+    .skill-tag:hover { background-color: var(--color-primary-dark); @apply -translate-y-px; }
+    
+    .timeline { @apply relative pl-10 mt-12; }
+    .timeline::before {
+        content: '';
+        @apply absolute left-4 top-2 bottom-2 w-[3px] bg-neutral-light rounded-sm;
+    }
+    .timeline-item { @apply relative mb-10; }
+    .timeline-item:last-child { @apply mb-0; }
+    .timeline-item::before { /* The dot */
+        content: '';
+        position: absolute;
+        left: -0.85rem; /* (2.5rem padding-left of .timeline - 0.5rem for dot center from line) - (1rem width / 2) = -0.85rem approx. */
+        top: 0.3rem; 
+        @apply w-4 h-4 bg-primary border-[3px] rounded-full z-10;
+        border-color: var(--color-neutral-lightest);
+    }
+    .timeline-content { @apply bg-white p-6 rounded-lg shadow-md; }
+    .timeline-content h4 { @apply text-lg mb-1; color: var(--color-primary); } /* font-size: 1.25rem */
+    .timeline-date { @apply text-sm text-neutral-dark mb-3 font-medium;}
+    .timeline-item p { @apply text-sm text-neutral-darker; }
+
+    /* Blog Post / Project Detail Specifics */
+    .article-header { @apply mb-8 pb-8 border-b border-neutral-light; }
+    .article-header .meta-info { @apply text-neutral-dark text-sm mb-2; }
+    .article-header .meta-info span { @apply mr-4; }
+    .article-content { @apply text-lg leading-loose; color: var(--color-neutral-darkest); }
+    .article-content h2 { @apply text-3xl mt-10 mb-4; color: var(--color-headings); }
+    .article-content h3 { @apply text-2xl mt-8 mb-3; color: var(--color-headings); }
+    .article-content p { @apply mb-6 text-neutral-darker; }
+    .article-content ul, .article-content ol { @apply ml-6 mb-6 text-neutral-darker; }
+    .article-content ul li { @apply list-disc mb-2; }
+    .article-content ol li { @apply list-decimal mb-2; }
+    .article-content a { @apply text-primary underline; }
+    .article-content a:hover { color: var(--color-primary-dark); }
+    .article-content blockquote {
+        @apply border-l-4 border-primary pl-6 my-6 italic text-neutral-dark;
+    }
+    .article-content img.cover-image {
+        @apply w-full max-h-[450px] object-cover rounded-lg mb-10 shadow-lg;
+    }
+    .project-details-gallery img {
+        @apply rounded-md shadow-md mb-4;
+    }
+    .tech-stack-list { @apply flex flex-wrap gap-3 my-6; }
+    .tech-stack-list .skill-tag { background-color: var(--color-accent); }
+    .tech-stack-list .skill-tag:hover { background-color: #0F9D71; /* Darker accent */ }
+}
+
+@layer utilities {
+    /* Animations */
+    .fade-in-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+
+    /* Custom utility classes can be added here if needed */
+    .hero-section {
+        background: linear-gradient(45deg, var(--color-primary) 0%, #60A5FA 100%);
+        @apply text-white overflow-hidden;
+    }
+    .hero-section h1 { @apply text-white text-5xl font-bold; }
+    .hero-section p { @apply text-xl; color: rgba(255,255,255,0.9); }
+
+    /* Responsive adjustments via Tailwind's screen variants are preferred */
+    /* For example: md:text-left, lg:grid-cols-3 */
+    /* The @media queries from the original CSS will be handled by Tailwind's responsive prefixes. */
+}

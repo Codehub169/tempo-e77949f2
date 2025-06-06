@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block title %}Home | John Doe - Web Developer{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section py-20 md:py-24 lg:py-32">
+    <div class="container">
+        <div class="flex flex-col md:flex-row items-center gap-12">
+            <div class="hero-content md:w-3/5 lg:w-1/2 text-center md:text-left">
+                <h1 class="fade-in-up">Hi, I'm John Doe</h1>
+                <p class="text-xl md:text-2xl mb-8 fade-in-up delay-100">
+                    A passionate Web Developer specializing in creating modern, responsive, and user-friendly web experiences. I turn complex problems into elegant digital solutions.
+                </p>
+                <div class="btn-group flex gap-4 justify-center md:justify-start fade-in-up delay-200">
+                    <a href="{{ url_for('projects_page') }}" class="btn btn-secondary btn-lg">View My Work</a>
+                    <a href="{{ url_for('contact_page') }}" class="btn btn-outline-primary btn-lg" style="--color-primary: #fff; --color-primary-dark: #eee; border-color: #fff;">Get In Touch</a>
+                </div>
+            </div>
+            <div class="hero-image-container md:w-2/5 lg:w-1/2 fade-in-up delay-300">
+                <img src="{{ url_for('static', filename='images/developer_hero.jpg') }}" alt="John Doe, Web Developer" class="hero-image rounded-lg shadow-xl mx-auto">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Snippet Section -->
+<section id="about-snippet" class="py-16 bg-white">
+    <div class="container text-center max-w-3xl">
+        <h2 class="text-3xl font-bold mb-6">A Little About Me</h2>
+        <p class="text-lg text-neutral-darker mb-8">
+            I'm a creative thinker and problem solver with a keen eye for detail. With 5+ years of experience in web development, I've honed my skills in HTML, CSS, JavaScript, and backend technologies like Python. I thrive on building applications that are not only functional but also aesthetically pleasing and intuitive to use.
+        </p>
+        <a href="{{ url_for('about_page') }}" class="btn btn-primary">Learn More About Me</a>
+    </div>
+</section>
+
+<!-- Featured Projects Section -->
+{% if featured_projects %}
+<section id="featured-projects" class="py-16 bg-neutral-lighter">
+    <div class="container">
+        <div class="section-heading">
+            <span class="sub-title">Portfolio</span>
+            <h2>Featured Projects</h2>
+            <p>Here's a glimpse of some projects I'm proud of. Check out my projects page for more.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for project in featured_projects %}
+            <div class="card fade-in-up delay-{{ loop.index0 * 100 }}">
+                <div class="card-image">
+                    <img src="{{ project.image_url or url_for('static', filename='images/project_placeholder.jpg') }}" alt="{{ project.title }}">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">{{ project.title }}</h3>
+                    <p class="card-excerpt">{{ project.short_description }}</p>
+                    {% if project.technologies %}
+                    <div class="card-tags">
+                        {% for tech in project.technologies.split(',')|map('trim') %}
+                        <span class="card-tag">{{ tech }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <a href="{{ url_for('project_detail_page', project_slug=project.slug) }}" class="card-link mt-auto">View Details <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-12">
+            <a href="{{ url_for('projects_page') }}" class="btn btn-secondary">Explore All Projects</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest Blog Posts Section -->
+{% if latest_posts %}
+<section id="latest-blog" class="py-16 bg-white">
+    <div class="container">
+        <div class="section-heading">
+            <span class="sub-title">Insights</span>
+            <h2>From My Blog</h2>
+            <p>Sharing my thoughts on web development, technology trends, and personal projects.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for post in latest_posts %}
+            <article class="card fade-in-up delay-{{ loop.index0 * 100 }}">
+                <div class="card-image">
+                     <img src="{{ post.cover_image_url or url_for('static', filename='images/blog_placeholder.jpg') }}" alt="{{ post.title }}">
+                </div>
+                <div class="card-content">
+                    <p class="text-sm text-neutral-dark mb-2">{{ post.post_date.strftime('%B %d, %Y') }} {% if post.category %}• {{ post.category }}{% endif %}</p>
+                    <h3 class="card-title">{{ post.title }}</h3>
+                    <p class="card-excerpt">{{ post.excerpt }}</p>
+                    <a href="{{ url_for('blog_post_page', post_slug=post.slug) }}" class="card-link mt-auto">Read More <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+         <div class="text-center mt-12">
+            <a href="{{ url_for('blog_page') }}" class="btn btn-outline-primary">Visit The Blog</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

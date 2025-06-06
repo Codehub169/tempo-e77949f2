@@ -1,0 +1,20 @@
+{
+  "name": "developer-portfolio",
+  "version": "1.0.0",
+  "description": "Portfolio website with blog, contact, and gallery.",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ./static/css/style.css --minify",
+    "watch:css": "tailwindcss -i ./src/input.css -o ./static/css/style.css --watch"
+  },
+  "keywords": [
+    "portfolio",
+    "tailwindcss",
+    "flask"
+  ],
+  "author": "Your Name",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  }
+}

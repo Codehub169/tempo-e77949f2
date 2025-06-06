@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+
+{% block title %}Project: {{ project.title }} | {{ super() }}{% endblock %}
+
+{% block content %}
+<main>
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1 class="fade-in-up">{{ project.title }}</h1>
+            <p class="fade-in-up delay-100">A closer look at one of my key projects.</p>
+        </div>
+    </section>
+
+    <!-- Project Detail Section -->
+    <section class="project-detail-section py-16 bg-white">
+        <div class="container max-w-4xl">
+            <article class="fade-in-up delay-200">
+                <div class="article-header">
+                    {% if project.image_url %}
+                        <img src="{{ project.image_url }}" alt="{{ project.title }} Cover Image" class="w-full max-h-[500px] object-cover rounded-lg shadow-lg mb-8">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/project_placeholder_detail.jpg') }}" alt="Project Placeholder Image" class="w-full max-h-[500px] object-cover rounded-lg shadow-lg mb-8">
+                    {% endif %}
+                    <div class="meta-info text-sm text-neutral-dark mb-4">
+                        <span><strong>Date:</strong> {{ project.date_created.strftime('%B %d, %Y') if project.date_created else 'N/A' }}</span>
+                    </div>
+                </div>
+
+                <div class="article-content prose lg:prose-xl max-w-none">
+                    {{ project.description | safe if project.description else '<p>No detailed description available for this project.</p>' }}
+                </div>
+
+                {% if project.technologies %}
+                <div class="mt-12">
+                    <h3 class="text-2xl font-semibold mb-4 text-headings">Technologies Used</h3>
+                    <div class="tech-stack-list">
+                        {% for tech in project.technologies.split(',') %}
+                            <span class="skill-tag">{{ tech.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="project-links mt-12 pt-8 border-t border-neutral-light">
+                    <h3 class="text-2xl font-semibold mb-6 text-headings">Project Links</h3>
+                    <div class="flex flex-wrap gap-4">
+                        {% if project.live_link %}
+                            <a href="{{ project.live_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">View Live Demo</a>
+                        {% endif %}
+                        {% if project.repo_link %}
+                            <a href="{{ project.repo_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">View Repository</a>
+                        {% endif %}
+                        {% if not project.live_link and not project.repo_link %}
+                            <p class="text-neutral-darker">No external links available for this project.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mt-16 text-center">
+                    <a href="{{ url_for('projects_page') }}" class="btn btn-outline-primary">&larr; Back to All Projects</a>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="cta-section py-16 bg-neutral-lighter">
+        <div class="container text-center max-w-2xl fade-in-up delay-300">
+            <h2 class="text-3xl font-bold mb-4 text-headings">Have a Project in Mind?</h2>
+            <p class="text-lg text-neutral-darker mb-8">
+                If you're inspired by what you see or have a similar challenge you'd like to discuss, I'd love to hear from you.
+            </p>
+            <a href="{{ url_for('contact_page') }}" class="btn btn-primary btn-lg">Let's Connect</a>
+        </div>
+    </section>
+</main>
+{% endblock %}

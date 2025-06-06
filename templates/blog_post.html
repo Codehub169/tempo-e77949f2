@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ post.title }} | Blog | {{ super() }}{% endblock %}
+
+{% block content %}
+<main>
+    <!-- Article Section -->
+    <section class="article-section py-12 md:py-16 bg-white">
+        <div class="container max-w-3xl">
+            <article class="fade-in-up">
+                <header class="article-header mb-8 md:mb-12 text-center">
+                    {% if post.category %}
+                        <p class="sub-title text-primary font-semibold uppercase tracking-wider mb-2">{{ post.category }}</p>
+                    {% endif %}
+                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-headings mb-4">{{ post.title }}</h1>
+                    <div class="meta-info text-sm text-neutral-dark">
+                        <span>By {{ post.author if post.author else 'Anonymous' }}</span> &bull;
+                        <span>{{ post.post_date.strftime('%B %d, %Y') if post.post_date else 'N/A' }}</span>
+                    </div>
+                </header>
+
+                {% if post.cover_image_url %}
+                    <img src="{{ post.cover_image_url }}" alt="{{ post.title }} Cover Image" class="w-full max-h-[550px] object-cover rounded-lg shadow-xl mb-8 md:mb-12">
+                {% endif %}
+
+                <div class="article-content prose lg:prose-xl max-w-none text-neutral-darkest leading-relaxed">
+                    {{ post.content | safe if post.content else '<p>This post has no content yet.</p>' }}
+                </div>
+
+                {% if post.tags %}
+                <div class="article-tags mt-12 pt-8 border-t border-neutral-light">
+                    <h3 class="text-xl font-semibold mb-3 text-headings">Tags</h3>
+                    <div class="flex flex-wrap gap-3">
+                        {% for tag in post.tags.split(',') %}
+                            <span class="card-tag">{{ tag.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="mt-16 text-center">
+                    <a href="{{ url_for('blog_page') }}" class="btn btn-outline-primary">&larr; Back to Blog</a>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Related Posts or CTA (Optional) -->
+    <section class="cta-section py-16 bg-neutral-lighter">
+        <div class="container text-center max-w-2xl fade-in-up delay-100">
+            <h2 class="text-3xl font-bold mb-4 text-headings">Enjoyed This Read?</h2>
+            <p class="text-lg text-neutral-darker mb-8">
+                Feel free to share your thoughts or explore more articles on my blog. Your feedback is always welcome!
+            </p>
+            <a href="{{ url_for('contact_page') }}" class="btn btn-primary btn-lg">Share Your Thoughts</a>
+        </div>
+    </section>
+</main>
+{% endblock %}
