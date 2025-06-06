@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block title %}External Service Data | John Doe - Web Developer{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="fade-in-up">External Service Data</h1>
+        <p class="fade-in-up delay-100">This page attempts to fetch and display data from an external service.</p>
+    </div>
+</section>
+
+<section class="py-16 bg-white">
+    <div class="container max-w-3xl">
+        <h2 class="text-2xl font-bold mb-6 text-center">Service Response</h2>
+        
+        {# Flash messages are handled by layout.html, this is for page-specific error display #}
+        {% if error_message %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+                <strong class="font-bold">Error:</strong>
+                <span class="block sm:inline">{{ error_message | e }}</span>
+            </div>
+            <p class="text-center text-neutral-darker">The application encountered an issue while trying to retrieve data from the external source. Please try again later or contact support if the issue persists.</p>
+        {% elif data %}
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6" role="alert">
+                <strong class="font-bold">Success!</strong>
+                <span class="block sm:inline">Data fetched successfully.</span>
+            </div>
+            <h3 class="text-xl font-semibold mb-4">Raw Data:</h3>
+            {# Use tojson filter for safe rendering of JSON-like data structure #}
+            {# indent=2 makes it human-readable #}
+            <pre class="bg-neutral-lighter p-4 rounded-md shadow text-sm overflow-x-auto"><code>{{ data | tojson(indent=2) }}</code></pre>
+        {% else %}
+            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-6" role="alert">
+                <strong class=

@@ -3,6 +3,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from models import db, Project, BlogPost, ContactMessage
 from datetime import datetime
+from module_handling_external_requests import fetch_data_from_external_service # Added import
 
 app = Flask(__name__)
 
@@ -39,7 +40,7 @@ with app.app_context():
         # For SQLite, ensure the directory for the database file exists.
         # This logic handles both absolute SQLite paths (e.g., sqlite:////path/to/db or sqlite:///C:/path/to/db)
         # and relative paths (e.g., sqlite:///relative/path/to/db, assumed relative to app.root_path).
-        db_file_uri_part = current_db_uri.replace('sqlite:///', '')
+        db_file_uri_part = current_db_uri.replace('sqlite:///', '', 1) # Replace only the first occurrence
         
         # os.path.abspath will correctly handle drive letters on Windows if db_file_uri_part starts with one e.g. C:/...
         # So, no special os.name == 'nt' check is needed here.
@@ -67,7 +68,7 @@ with app.app_context():
         elif is_sqlite:
             app.logger.error(
                 "This connection attempt used an SQLite URI. "
-                "Please check file system permissions and path correctness."
+                "Please check file system permissions and path correctness for path: {db_file_abs_path if 'db_file_abs_path' in locals() else db_file_uri_part}."
             )
         # Re-raise the exception to halt app startup, making the DB issue clear.
         raise
@@ -119,12 +120,12 @@ def contact():
 
             if not name or not email or not message_text:
                 flash('Name, Email, and Message are required fields.', 'error')
-                return render_template('contact.html', form_data=form_data)
+                return render_template('contact.html', form_data=form_data), 400
             
-            # Basic email validation (can be enhanced)
-            if '@' not in email or '.' not in email.split('@')[-1]:
+            # Basic email validation (can be enhanced with a library like email_validator for production)
+            if '@' not in email or '.' not in email.split('@')[-1] or len(email.split('@')[-1].split('.')) < 2 or not email.split('@')[-1].split('.')[-1]:
                 flash('Please enter a valid email address.', 'error')
-                return render_template('contact.html', form_data=form_data)
+                return render_template('contact.html', form_data=form_data), 400
 
             new_message = ContactMessage(
                 name=name,
@@ -135,27 +136,51 @@ def contact():
             db.session.add(new_message)
             db.session.commit()
             flash('Your message has been sent successfully! I will get back to you soon.', 'success')
-            return redirect(url_for('contact')) # Or a thank you page
+            return redirect(url_for('contact')) # PRG pattern
         except Exception as e:
             db.session.rollback()
             app.logger.error(f"Error processing contact form: {e}")
             flash('An error occurred while sending your message. Please try again.', 'error')
-            return render_template('contact.html', form_data=form_data)
+            # It's good practice to return a 500 status code for server errors
+            return render_template('contact.html', form_data=form_data), 500
 
     return render_template('contact.html', form_data=form_data)
+
+# New route to demonstrate handling external API calls
+@app.route('/show-external-data')
+def show_external_data():
+    app.logger.info("Attempting to fetch data from external service for /show-external-data route.")
+    result = fetch_data_from_external_service()
+    
+    if result.get('status') == 'success':
+        app.logger.info(f"Successfully fetched external data: {result.get('data')}")
+        return render_template('show_external_data.html', data=result.get('data'), error_message=None)
+    else:
+        error_message = result.get('message', 'An unknown error occurred while fetching external data.')
+        error_type = result.get('type', 'UnknownError')
+        app.logger.error(f"Failed to fetch external data. Type: {error_type}, Message: {error_message}")
+        flash(f"Error: {error_message}", 'error')
+        # Consider appropriate HTTP status code if the error is critical for the page
+        return render_template('show_external_data.html', data=None, error_message=error_message)
 
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
 
+@app.errorhandler(500)
+def internal_server_error(e):
+    app.logger.error(f"Server Error: {e}") # Log the actual error
+    return render_template('500.html'), 500 # A custom 500.html is recommended
+
 # --- Helper function to add sample data (optional, for development) ---
 def add_sample_data():
     with app.app_context():
-        # Clear existing data
-        db.session.query(Project).delete()
+        # Clear existing data - be cautious with this in any environment close to production
+        app.logger.info("Clearing existing sample data (Projects, BlogPosts, ContactMessages).")
+        db.session.query(ContactMessage).delete() # Order matters if there are FKs, though not here
         db.session.query(BlogPost).delete()
-        db.session.query(ContactMessage).delete()
-        db.session.commit()
+        db.session.query(Project).delete()
+        # db.session.commit() # Commit deletions before adding new data
 
         # Sample Projects
         projects_data = [
@@ -197,7 +222,7 @@ def add_sample_data():
                 'slug': 'project-delta', 
                 'short_description': 'A comprehensive personal finance tracker with budgeting tools and expense analysis.', 
                 'description': 'Project Delta helps users manage their finances effectively. It supports multiple accounts, transaction categorization, budget creation, and insightful reports on spending habits. The backend is powered by Django, providing a secure and scalable API, while the frontend is a responsive web app built with HTML, CSS (Tailwind), and Vanilla JavaScript.',
-                'image_url': 'static/images/placeholder_project.png', # Placeholder, replace with actual image 
+                'image_url': 'static/images/placeholder_project.png', 
                 'technologies': 'Django,Python,JavaScript,Tailwind CSS,SQLite',
                 'project_link': '#', 
                 'repo_link': '#',
@@ -242,7 +267,7 @@ def add_sample_data():
                 'slug': 'docker-for-web-devs', 
                 'excerpt': 'Learn how Docker can streamline your development workflow and simplify deployment.', 
                 'content': 'Docker has revolutionized how applications are built, shipped, and run. For web developers, it offers consistent development environments, easier collaboration, and simplified deployment processes. This introductory guide covers the basics of Docker, including images, containers, Dockerfiles, and Docker Compose. Understand the benefits of containerization and how to integrate Docker into your web development projects to improve efficiency and reduce headaches.',
-                'cover_image_url': 'static/images/placeholder_blog.png', # Placeholder, replace with actual image
+                'cover_image_url': 'static/images/placeholder_blog.png', 
                 'category': 'DevOps', 
                 'tags': 'Docker,Deployment,Web Development,Tools'
             }
@@ -251,17 +276,24 @@ def add_sample_data():
             post = BlogPost(**b_data)
             db.session.add(post)
         
-        db.session.commit()
-        app.logger.info("Sample data added to the database.")
+        try:
+            db.session.commit()
+            app.logger.info("Sample data added to the database.")
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Error adding sample data: {e}")
 
 if __name__ == '__main__':
     with app.app_context():
         # Check if DB needs seeding (e.g. if Projects table is empty)
+        # This check is basic; more sophisticated seeding might be needed for complex apps
         if not Project.query.first() and not BlogPost.query.first():
             app.logger.info("Database appears to be empty. Adding sample data...")
             add_sample_data()
         else:
-            app.logger.info("Database already contains data. Skipping sample data addition.")
-    # The host and port are typically managed by Gunicorn in startup.sh
-    # For direct `python app.py` execution for development:
-    app.run(debug=os.environ.get("FLASK_ENV") == "development", host='0.0.0.0', port=int(os.environ.get("PORT", 9000)))
+            app.logger.info("Database already contains data or is partially seeded. Skipping sample data addition.")
+    
+    # For direct `python app.py` execution (development):
+    # Gunicorn is recommended for production (see startup.sh).
+    is_development = os.environ.get("FLASK_ENV") == "development"
+    app.run(debug=is_development, host='0.0.0.0', port=int(os.environ.get("PORT", 9000)))
